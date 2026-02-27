@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafío M.A.S. Visual - Prof. Victor</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sec: #64748b;
+        }
+
+        body { 
+            font-family: 'Segoe UI', system-ui, sans-serif; 
+            background: var(--bg); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px; 
+            color: var(--text-main);
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            width: 100%; 
+            max-width: 550px; 
+            padding: 30px; 
+            border-radius: 30px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08); 
+            text-align: center; 
+        }
+
+        .hidden { display: none !important; }
+
+        /* Simulación Visual */
+        #simulacionMAS {
+            width: 100%;
+            height: 140px;
+            background: #f1f5f9;
+            border-radius: 20px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #e2e8f0;
+        }
+
+        #resorte {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            height: 4px;
+            background: repeating-linear-gradient(90deg, #94a3b8, #94a3b8 10px, transparent 10px, transparent 20px);
+            transform: translateY(-50%);
+            width: 50%;
+        }
+
+        #bloque {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 8px;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .eje {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            height: 1px;
+            background: #cbd5e1;
+        }
+
+        .marca {
+            position: absolute;
+            bottom: 10px;
+            width: 2px;
+            height: 10px;
+            background: #cbd5e1;
+        }
+
+        /* UI Elements */
+        input { 
+            width: 100%; padding: 15px; margin: 10px 0; border: 2px solid #e2e8f0; border-radius: 15px; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: var(--primary); }
+
+        button { 
+            padding: 15px 25px; cursor: pointer; border: none; border-radius: 15px; font-weight: bold; font-size: 16px; transition: 0.2s; 
+        }
+
+        .btn-start { background: var(--primary); color: white; width: 100%; margin-top: 20px; box-shadow: 0 4px 12px rgba(99,102,241,0.2); }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(99,102,241,0.3); }
+
+        .btn-opt { background: #fff; color: var(--text-main); border: 2px solid #e2e8f0; width: 100%; text-align: left; padding: 16px; margin: 8px 0; display: flex; align-items: center; }
+        .btn-opt:hover { border-color: var(--primary); background: #f5f3ff; }
+
+        #timerBarContainer {
+            width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; margin-bottom: 20px; overflow: hidden;
+        }
+        #timerBarProgress {
+            width: 100%; height: 100%; background: var(--primary); transition: width 1s linear;
+        }
+
+        .stats-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .badge { background: #f1f5f9; padding: 6px 12px; border-radius: 10px; font-size: 12px; font-weight: bold; color: var(--text-sec); }
+
+        .report-box { text-align: left; background: #f8fafc; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; margin-top: 20px; }
+        .report-line { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 5px; }
+
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <!-- INICIO -->
+    <div id="pantallaInicio">
+        <div style="font-size: 60px; margin-bottom: 10px;">📉</div>
+        <h2 style="margin: 0; color: var(--primary);">MAS Visual Lab</h2>
+        <p style="color: var(--text-sec); margin-bottom: 25px;">Laboratorio de Física | Prof. Victor</p>
+        <input type="text" id="inputNombre" placeholder="Tu Nombre">
+        <input type="text" id="inputEquipo" placeholder="Tu Grado / Grupo">
+        <button class="btn-start" onclick="comenzar(1)">EXPLORAR CONCEPTOS 🚀</button>
+    </div>
+
+    <!-- JUEGO -->
+    <div id="pantallaJuego" class="hidden">
+        <div id="timerBarContainer"><div id="timerBarProgress"></div></div>
+        
+        <div class="stats-row">
+            <div style="text-align: left;">
+                <div id="displayNombre" style="font-weight: bold; font-size: 16px;"></div>
+                <div id="displayEquipo" style="font-size: 12px; color: var(--text-sec);"></div>
+            </div>
+            <div id="displayNivel" class="badge">Nivel 1</div>
+        </div>
+
+        <!-- SIMULADOR INTERACTIVO -->
+        <div id="simulacionMAS">
+            <div class="eje"></div>
+            <div class="marca" style="left: 20%;"></div> <!-- -A -->
+            <div class="marca" style="left: 50%; height: 15px; background: #94a3b8;"></div> <!-- 0 -->
+            <div class="marca" style="left: 80%;"></div> <!-- +A -->
+            <div id="resorte"></div>
+            <div id="bloque"></div>
+            <div style="position: absolute; bottom: 5px; left: 18%; font-size: 10px; color: #94a3b8;">-A</div>
+            <div style="position: absolute; bottom: 5px; left: 49%; font-size: 10px; color: #94a3b8;">0</div>
+            <div style="position: absolute; bottom: 5px; left: 78%; font-size: 10px; color: #94a3b8;">+A</div>
+        </div>
+
+        <div id="txtContexto" style="font-size: 14px; color: var(--text-sec); margin-bottom: 10px; height: 40px;"></div>
+        <div id="areaPregunta" style="font-size: 1.2rem; font-weight: bold; margin-bottom: 20px;"></div>
+        
+        <div id="areaBotones"></div>
+
+        <div style="margin-top: 20px; font-size: 11px; color: #9ca3af; letter-spacing: 1px;">
+            PREGUNTA <span id="numPreg">1</span> DE <span id="totalPreg">10</span>
+        </div>
+    </div>
+
+    <!-- FINAL -->
+    <div id="pantallaFinal" class="hidden">
+        <h2 id="tituloFinal">Resultado del Lab</h2>
+        <div id="scoreDetalle" style="font-size: 50px; font-weight: 900; margin: 15px 0;"></div>
+        
+        <div class="report-box">
+            <div class="report-line"><span>Estudiante:</span> <span id="resNombre"></span></div>
+            <div class="report-line"><span>Equipo:</span> <span id="resEquipo"></span></div>
+            <div class="report-line"><span>Nivel 1 (Espacial):</span> <span id="resN1"></span></div>
+            <div class="report-line"><span>Nivel 2 (Algebraico):</span> <span id="resN2"></span></div>
+            <div class="report-line" style="border: none; margin-top: 15px; font-weight: 800; font-size: 18px;">
+                <span>Estatus:</span> <span id="resEstado"></span>
+            </div>
+        </div>
+        
+        <div id="contenedorAccionesFinales" style="margin-top: 20px;"></div>
+        <p style="margin-top: 30px; font-size: 11px; color: #cbd5e1; text-transform: uppercase;">Simulador MAS v2.0 - Victor</p>
+    </div>
+</div>
+
+<script>
+    let nivel = 1, preguntaIdx = 0, aciertosN1 = 0, aciertosN2 = 0, aciertosActuales = 0;
+    let nombre = "", equipo = "", timer = null, timeLeft = 120;
+    let animId = null, angle = 0;
+
+    const preguntasN1 = [
+        { c: "Mira el bloque moviéndose de un extremo a otro.", q: "¿Cómo se llama el tiempo de un viaje completo?", r: "Periodo (T)", o: ["Frecuencia", "Elongación", "Fase"] },
+        { c: "Observa la marca central '0' en el simulador.", q: "¿Cómo es la velocidad al pasar por ese punto?", r: "Máxima", o: ["Nula", "Mínima", "Constante"] },
+        { c: "El bloque llega a las marcas extremas (-A y +A).", q: "¿Cómo es la velocidad en esos puntos?", r: "Nula (Cero)", o: ["Máxima", "Media", "Infinita"] },
+        { c: "La distancia desde '0' hasta '+A' es la máxima.", q: "¿Qué nombre recibe esta distancia?", r: "Amplitud (A)", o: ["Frecuencia", "Periodo", "Ciclo"] },
+        { c: "Cuenta cuántas veces pasa el bloque por '+A' en un segundo.", q: "¿Qué magnitud estarías midiendo?", r: "Frecuencia (f)", o: ["Periodo", "Longitud", "Masa"] },
+        { c: "El bloque se encuentra en una posición 'x' cualquiera.", q: "¿Cómo se llama esa posición instantánea?", r: "Elongación (x)", o: ["Amplitud", "Cresta", "Fase"] },
+        { c: "En las marcas extremas (-A / +A), el resorte está muy estirado.", q: "¿Cómo es la aceleración allí?", r: "Máxima", o: ["Nula", "Media", "Negativa siempre"] },
+        { c: "La unidad Hertz (Hz) mide las vueltas por segundo.", q: "¿A qué magnitud pertenece?", r: "Frecuencia", o: ["Periodo", "Velocidad", "Tiempo"] },
+        { c: "El resorte siempre intenta jalar el bloque hacia '0'.", q: "¿Qué nombre recibe esa fuerza?", r: "Fuerza Recuperadora", o: ["Fricción", "Normal", "Peso"] },
+        { c: "Si el bloque tarda más tiempo en completar el ciclo...", q: "¿Qué magnitud ha aumentado?", r: "El Periodo", o: ["La Frecuencia", "La Gravedad", "La Fase"] }
+    ];
+
+    const preguntasN2 = [
+        { c: "Relación fundamental: ω, π y T.", q: "¿Cuál es la fórmula de la frecuencia angular?", r: "ω = 2π / T", o: ["ω = 2π · T", "ω = T / 2π", "ω = 1 / T"] },
+        { c: "Basado en la Ley de Hooke mostrada en tu PDF.", q: "¿Cuál es la fórmula de la Fuerza?", r: "F = -k · x", o: ["F = m · a", "F = k / x", "F = ω · A"] },
+        { c: "Posición horizontal (x) respecto al tiempo.", q: "¿Qué función trigonométrica la define?", r: "x = A · cos(ωt)", o: ["x = A · sen(t)", "x = V · t", "x = k · x"] },
+        { c: "Rapidez extrema cuando el bloque cruza el '0'.", q: "¿Cómo se calcula la Vmax?", r: "Vmax = ω · A", o: ["Vmax = ω² · A", "Vmax = A / ω", "Vmax = k · x"] },
+        { c: "Aceleración extrema en los puntos de retorno.", q: "¿Cómo se calcula la amax?", r: "amax = ω² · A", o: ["amax = ω · A", "amax = -k · x", "amax = A / T²"] },
+        { c: "Si conocemos k y ω, podemos hallar la masa.", q: "¿Cuál es el despeje correcto de m?", r: "m = k / ω²", o: ["m = k · ω²", "m = ω² / k", "m = √(k/ω)"] },
+        { c: "Si conocemos m y ω, podemos hallar la constante.", q: "¿Cuál es el despeje de k?", r: "k = m · ω²", o: ["k = m / ω²", "k = ω / m", "k = m · g"] },
+        { c: "Frecuencia (f) en función de pulsos (q) y tiempo (T).", q: "¿Cuál es la relación?", r: "f = q / T", o: ["f = T / q", "f = 1 / ω", "f = q · T"] }
+    ];
+
+    function animar() {
+        angle += 0.05;
+        const x = Math.cos(angle) * 30; // 30% de amplitud
+        const bloque = document.getElementById('bloque');
+        const resorte = document.getElementById('resorte');
+        
+        if (bloque) bloque.style.left = (50 + x) + "%";
+        if (resorte) resorte.style.width = (50 + x) + "%";
+        
+        animId = requestAnimationFrame(animar);
+    }
+
+    function iniciarTimer() {
+        clearInterval(timer);
+        timeLeft = 120;
+        const bar = document.getElementById('timerBarProgress');
+        timer = setInterval(() => {
+            timeLeft--;
+            bar.style.width = (timeLeft / 120 * 100) + "%";
+            if (timeLeft <= 0) terminarLab();
+        }, 1000);
+    }
+
+    function comenzar(n) {
+        if (n === 1) {
+            nombre = document.getElementById('inputNombre').value;
+            equipo = document.getElementById('inputEquipo').value;
+            if (!nombre || !equipo) return alert("Ingresa tus datos");
+        }
+        nivel = n;
+        preguntaIdx = 0;
+        aciertosActuales = 0;
+        
+        document.getElementById('pantallaInicio').classList.add('hidden');
+        document.getElementById('pantallaFinal').classList.add('hidden');
+        document.getElementById('pantallaJuego').classList.remove('hidden');
+        
+        document.getElementById('displayNombre').innerText = nombre;
+        document.getElementById('displayEquipo').innerText = equipo;
+        document.getElementById('displayNivel').innerText = "Nivel " + nivel;
+        document.getElementById('totalPreg').innerText = nivel === 1 ? 10 : 8;
+
+        if (!animId) animar();
+        iniciarTimer();
+        nuevaPregunta();
+    }
+
+    function nuevaPregunta() {
+        const banco = nivel === 1 ? preguntasN1 : preguntasN2;
+        const p = banco[preguntaIdx];
+        
+        document.getElementById('numPreg').innerText = preguntaIdx + 1;
+        document.getElementById('txtContexto').innerText = p.c;
+        document.getElementById('areaPregunta').innerText = p.q;
+
+        const area = document.getElementById('areaBotones');
+        area.innerHTML = "";
+        
+        let opts = [p.r, ...p.o].sort(() => Math.random() - 0.5);
+        opts.forEach(o => {
+            const b = document.createElement('button');
+            b.className = "btn-opt";
+            b.innerText = o;
+            b.onclick = () => {
+                if (o === p.r) aciertosActuales++;
+                if (preguntaIdx < banco.length - 1) {
+                    preguntaIdx++;
+                    nuevaPregunta();
+                } else {
+                    if (nivel === 1) {
+                        aciertosN1 = aciertosActuales;
+                        if (aciertosN1 >= 7) mostrarPaso();
+                        else terminarLab();
+                    } else {
+                        aciertosN2 = aciertosActuales;
+                        terminarLab();
+                    }
+                }
+            };
+            area.appendChild(b);
+        });
+    }
+
+    function mostrarPaso() {
+        clearInterval(timer);
+        document.getElementById('pantallaJuego').classList.add('hidden');
+        document.getElementById('pantallaFinal').classList.remove('hidden');
+        document.getElementById('tituloFinal').innerText = "¡Conceptos Dominados! 🔓";
+        document.getElementById('scoreDetalle').innerText = aciertosN1 + "/10";
+        actualizarReporte();
+        document.getElementById('contenedorAccionesFinales').innerHTML = `
+            <button class="btn-start" onclick="comenzar(2)">IR A ÁLGEBRA Y FÓRMULAS (NIVEL 2) 🧠</button>
+        `;
+    }
+
+    function terminarLab() {
+        clearInterval(timer);
+        cancelAnimationFrame(animId);
+        animId = null;
+        
+        if (nivel === 1) aciertosN1 = aciertosActuales;
+        else aciertosN2 = aciertosActuales;
+
+        document.getElementById('pantallaJuego').classList.add('hidden');
+        document.getElementById('pantallaFinal').classList.remove('hidden');
+        
+        actualizarReporte();
+        const finalPts = aciertosN1 + (nivel === 2 ? aciertosN2 : 0);
+        document.getElementById('scoreDetalle').innerText = finalPts + " PTS";
+        
+        const res = document.getElementById('resEstado');
+        if ((nivel === 2 && finalPts >= 13) || (nivel === 1 && aciertosN1 >= 7 && finalPts < 13)) {
+            res.innerText = "COMPLETADO ✅"; res.className = "success";
+        } else {
+            res.innerText = "INCOMPLETO ❌"; res.className = "error";
+        }
+        document.getElementById('contenedorAccionesFinales').innerHTML = "";
+    }
+
+    function actualizarReporte() {
+        document.getElementById('resNombre').innerText = nombre;
+        document.getElementById('resEquipo').innerText = equipo;
+        document.getElementById('resN1').innerText = aciertosN1 + " / 10";
+        document.getElementById('resN2').innerText = nivel === 2 ? aciertosN2 + " / 8" : "Pendiente";
+    }
+</script>
+</body>
+</html>
